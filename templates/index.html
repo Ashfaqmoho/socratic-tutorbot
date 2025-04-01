@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Socratic Tutor Bot</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <h1>Socratic Tutor Bot</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="userInput" placeholder="Ask a question..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+      function sendMessage() {
+        let userInput = document.getElementById("userInput").value;
+        if (!userInput) return;
+
+        let chatbox = document.getElementById("chatbox");
+        chatbox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+
+        fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: userInput }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            chatbox.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+            document.getElementById("userInput").value = "";
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+    </script>
+  </body>
+</html>
