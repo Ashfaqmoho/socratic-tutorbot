@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Socratic Tutor Bot</title>
-
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
@@ -20,25 +19,44 @@
     </div>
 
     <script>
-      function sendMessage() {
+      async function sendMessage() {
         let userInput = document.getElementById("userInput").value;
         if (!userInput) return;
 
         let chatbox = document.getElementById("chatbox");
         chatbox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
 
-        fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userInput }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            chatbox.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
-            document.getElementById("userInput").value = "";
-          })
-          .catch((error) => console.error("Error:", error));
+        // Add "Thinking..." message
+        let thinking = document.createElement("p");
+        thinking.id = "thinking";
+        thinking.innerHTML = "<strong>Bot:</strong> Thinking...";
+        chatbox.appendChild(thinking);
+        chatbox.scrollTop = chatbox.scrollHeight; // Auto-scroll to bottom
+
+        try {
+          const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userInput }),
+          });
+          const data = await response.json();
+
+          // Remove "Thinking..." and show response
+          document.getElementById("thinking").remove();
+          chatbox.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+          chatbox.scrollTop = chatbox.scrollHeight; // Auto-scroll to bottom
+        } catch (error) {
+          document.getElementById("thinking").remove();
+          chatbox.innerHTML += `<p><strong>Bot:</strong> Error: ${error}</p>`;
+        }
+
+        document.getElementById("userInput").value = ""; // Clear input
       }
+
+      // Allow Enter key to send message
+      document.getElementById("userInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
+      });
     </script>
   </body>
 </html>
